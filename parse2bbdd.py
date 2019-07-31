@@ -27,6 +27,12 @@ class LineParser:
         m = hashlib.sha256()
         m.update(s)
         return binascii.hexlify(m.digest())
+    
+    @staticmethod
+    def ntlm(s):
+        m = hashlib.new('md4', password.encode('utf-16le'))
+        m.update(s)
+        return binascii.hexlify(m.digest())
 
     @staticmethod
     def parsesimplelinebyseparator(s, sep, sepname):
@@ -90,32 +96,37 @@ class LineParser:
             passwdsha1 = ""
             passwdsha256 = ""
             passwdbcrypt = ""
+            passwdntlm = ""
             passwd = ""
         elif LineParser.issha1(passwd):
             passwdmd5 = ""
             passwdsha1 = passwd
             passwdsha256 = ""
             passwdbcrypt = ""
+            passwdntlm = ""
             passwd = ""
         elif LineParser.issha256(passwd):
             passwdmd5 = ""
             passwdsha1 = ""
             passwdsha256 = passwd
             passwdbcrypt = ""
+            passwdntlm = ""
             passwd = ""
         elif LineParser.isbcrypt(passwd):
             passwdmd5 = ""
             passwdsha1 = ""
             passwdsha256 = ""
             passwdbcrypt = passwd
+            passwdntlm = ""
             passwd = ""
         else:
             passwdmd5 = LineParser.md5(passwd)
             passwdsha1 = LineParser.sha1(passwd)
             passwdsha256 = LineParser.sha256(passwd)
             passwdbcrypt = ""
+            passwdntlm = LineParser.ntlm(passwd)
         
-        return passwd, passwdmd5, passwdsha1, passwdsha256, passwdbcrypt
+        return passwd, passwdmd5, passwdsha1, passwdsha256, passwdbcrypt, passwdntlm
 
     @staticmethod
     def parseline(s):
@@ -136,8 +147,8 @@ class LineParser:
         if not good: good, user, mail, passwd, typ = LineParser.parsesimplelinebyseparator(s, ';', "doubledots_or_dotcomma")
         if good: bvalid = True
         if bvalid: 
-            passwd, passwdmd5, passwdsha1, passwdsha256, passwdbcrypt = LineParser.parsepasswd(passwd)
-            return {"type": typ, "mail": mail  , "user": user, "pass": passwd, "passmd5": passwdmd5, "passsha1": passwdsha1, "passsha256": passwdsha256, "passwdbcrypt": passwdbcrypt}
+            passwd, passwdmd5, passwdsha1, passwdsha256, passwdbcrypt, passwdntlm = LineParser.parsepasswd(passwd)
+            return {"type": typ, "mail": mail  , "user": user, "pass": passwd, "passmd5": passwdmd5, "passsha1": passwdsha1, "passsha256": passwdsha256, "passwdbcrypt": passwdbcrypt, "passwdntlm": passwdntlm}
 
 ##########################################################################
 
@@ -246,8 +257,8 @@ class LeakParser:
             if info: print repr(info)
         self.test_info2bbdd_counter += 1
         if info:
-            sql = """INSERT INTO credentials(collection, subcollection, username, email, password_plaintext, password_md5, password_sha1, password_sha256, password_bcrypt) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-            self.cursor.execute(sql, (self.collectionid, self.subcollectionid, str(info["user"]), str(info["mail"]), str(info["pass"]), str(info["passmd5"]), str(info["passsha1"]), str(info["passsha256"]), str(info["passwdbcrypt"]),))
+            sql = """INSERT INTO credentials(collection, subcollection, username, email, password_plaintext, password_md5, password_sha1, password_sha256, password_bcrypt, password_ntlm) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+            self.cursor.execute(sql, (self.collectionid, self.subcollectionid, str(info["user"]), str(info["mail"]), str(info["pass"]), str(info["passmd5"]), str(info["passsha1"]), str(info["passsha256"]), str(info["passwdbcrypt"]), str(info["passwdntlm"]),))
 
     def run(self):
         lastinconsistences = []
