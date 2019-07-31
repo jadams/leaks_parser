@@ -138,6 +138,7 @@ class LineParser:
         passwdsha1 = ""
         passwdsha256 = ""
         passwdbcrypt = ""
+        passwdntlm = ""
         bvalid = False
         #case   mail@mail.com:password
         #case   username:password
