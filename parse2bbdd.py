@@ -30,8 +30,8 @@ class LineParser:
     
     @staticmethod
     def ntlm(s):
-        m = hashlib.new('md4', password.encode('utf-16le'))
-        m.update(s)
+        m = hashlib.new('md4')
+        m.update(s.encode('utf-16le'))
         return binascii.hexlify(m.digest())
 
     @staticmethod
